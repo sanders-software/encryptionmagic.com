@@ -1,5 +1,5 @@
 # Getting Started with Encryption Magic
-This project required Node.js.  In the project directory, run:
+This project requires Node.js.  In the project directory, run:
 
 ### `npm i`
 
