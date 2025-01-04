@@ -1,38 +1,39 @@
 import { useState, useEffect }  from 'react';
 import { Row, Col } from 'react-bootstrap';
-import RandomAdElement from './RandomAdElement';
+//import RandomAdElement from './RandomAdElement';
 import Terms from './Terms';
 import Contact from './Contact';
 import Home from './Home';
+//import { asciiToBase64enmEnc, fromBase64enmEncToAscii, getRandomUint32 } from './Util'
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
-const getRandomUint32 = () => {
-  const array = new Uint32Array(1);
-  window.crypto.getRandomValues(array);
-  return array[0];
-};
+// const getRandomUint32 = () => {
+//   const array = new Uint32Array(1);
+//   window.crypto.getRandomValues(array);
+//   return array[0];
+// };
 
 function App() {
 
   const [hash, setHash] = useState(window.location.hash.substring(1));
-  
-  const [useBinary, setUseBinary] = useState(false);
+  const [encryptionType, setEncryptionType] = useState('File2Text');
   const [page, setPage] = useState(hash ? hash : 'home');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isBase64Password, setIsBase64Password] = useState(true);
   const [showLeftSide, setShowLeftSide] = useState(window.innerWidth > 608);
   const [showRightSide, setShowRightSide] = useState(window.innerWidth >= 851);
-  const [intArray, setIntArray] = useState([])
+  // const [intArray, setIntArray] = useState([])
 
-  useEffect(() => {
-    setIntArray(intArray => {
-      const newArray = [...intArray];
-      [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].forEach(() => newArray.push(getRandomUint32()));
-      return newArray;
-    });
-  }, []);
+  // useEffect(() => {
+  //   setIntArray(intArray => {
+  //     const newArray = [...intArray];
+  //     [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16].forEach(() => newArray.push(getRandomUint32()));
+  //     return newArray;
+  //   });
+  // }, []);
 
   useEffect(() => {
     const handleHashChange = () => setHash(window.location.hash.substring(1));
@@ -47,7 +48,7 @@ function App() {
   window.addEventListener('resize', function() {
     setShowLeftSide(window.innerWidth > 608);
     setShowRightSide(window.innerWidth >= 851);
-  });  
+  });
 
   return (
     <div className="App">
@@ -79,7 +80,7 @@ function App() {
               </Row>
               <Row>
                 <Col>
-                  <RandomAdElement index={intArray[(800 + value) % intArray.length]}></RandomAdElement>
+                  {/* <RandomAdElement index={intArray[(800 + value) % intArray.length]}></RandomAdElement> */}
                 </Col>
               </Row>
               </div>))}
@@ -88,16 +89,18 @@ function App() {
               page === 'terms' ? (<Terms />) :
               page === 'contact' ? (<Contact />) :
               (
-                <Home 
-                  useBinary={useBinary} 
-                  setUseBinary={setUseBinary}
+                <Home
+                  encryptionType={encryptionType}
+                  setEncryptionType={setEncryptionType}
                   password={password}
                   setPassword={setPassword}
                   showPassword={showPassword}
                   setShowPassword={setShowPassword}
+                  isBase64Password={isBase64Password}
+                  setIsBase64Password={setIsBase64Password}
                 />
               )
-              }
+            }
             {showRightSide && (
               <Col className={"col-2"} style={{ textAlign: "center"}}>
               <Row>
@@ -113,7 +116,7 @@ function App() {
               </Row>
               <Row>
                 <Col>
-                  <RandomAdElement index={intArray[(900 + value) % intArray.length]}></RandomAdElement>
+                  {/* <RandomAdElement index={intArray[(900 + value) % intArray.length]}></RandomAdElement> */}
                 </Col>
               </Row>
               </div>))}

@@ -1,11 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 const PasswordToggleInput = ({ptPasswordValue, ptChangePassword, ptClass, ptStyle, ptShowPassword, ptSetShowPassword}) => {
 
   const textBoxRef = useRef(null);
-  const [showPasswordRequired, setShowPasswordRequired] = useState(!ptPasswordValue || !ptPasswordValue.length || ptPasswordValue.length < 6 );
+  const [showPasswordRequired, setShowPasswordRequired] = useState(!ptPasswordValue || !ptPasswordValue.length || ptPasswordValue.length < 6);
+
+  useEffect(() => {
+    setShowPasswordRequired(!ptPasswordValue || !ptPasswordValue.length || ptPasswordValue.length < 6);
+  }, [ptPasswordValue]);
 
   const handleTogglePassword = () => {
     ptSetShowPassword((prevState) => !prevState);

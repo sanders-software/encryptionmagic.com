@@ -4,21 +4,7 @@ import PasswordToggleInput from './PasswordToggleInput';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 
-function generateRandomPasswordWithCrypto(length) {
-    const characters = '!@#$%^&*()-+<>/?;:"{[]}\\|`~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const randomCharacters = [];
-  
-    while (randomCharacters.length < length) {
-      const byte = crypto.getRandomValues(new Uint8Array(1))[0];
-      const character = characters[byte % characters.length];
-      randomCharacters.push(character);
-    }
-  
-    return randomCharacters.join('');
-}
-
-
-function BinaryEncryption({password, changePassword, showPassword, setShowPassword}) {
+function BinaryEncryption({password, changePassword, showPassword, setShowPassword, isBase64Password, setIsBase64Password}) {
 
     const changeHandler = (event) => {
         
@@ -66,7 +52,29 @@ function BinaryEncryption({password, changePassword, showPassword, setShowPasswo
     };
 
     return (
-    <div>
+    <>
+        <Row>
+            <div className={"col-6"}>
+                Password:
+            </div>
+            <div className={"col-6"}>
+                <input
+                    className="form-check-input"
+                    type="checkbox"
+                    name="UseBase64"
+                    id="UseBase64"
+                    checked={isBase64Password}
+                    onChange={e => setIsBase64Password(!isBase64Password)}
+                    style={{ borderColor: "purple" }}
+                    title=""
+                />&nbsp;
+                <label 
+                    className="form-check-label" 
+                    htmlFor="textOption"
+                    onClick={() => setIsBase64Password(!isBase64Password)}
+                >base64 password (most secure)</label>
+            </div>
+        </Row>
         <Row>
             <Col className={"col-12"} style={{ marginLeft: "7px" }}>
                 Password:
@@ -88,7 +96,7 @@ function BinaryEncryption({password, changePassword, showPassword, setShowPasswo
             <Col className={"col-12"}>
             <Button 
                     onClick={() => {
-                        changePassword(generateRandomPasswordWithCrypto(32));
+                        changePassword(isBase64Password ? window.getRandomBase64Password : window.generateRandomPassword(32));
                     }}
                     title={'auto-generate-password'}
                 >Auto-generate password</Button>
@@ -99,7 +107,7 @@ function BinaryEncryption({password, changePassword, showPassword, setShowPasswo
                 <Form noValidate>
                     <Row className={"appliance-table-row"}>
                         <Col className="col-4">    
-                            <Form.Label style={{ marginTop: '10px', marginLeft: '7px' }}>Encrypt a file:</Form.Label>
+                            <Form.Label style={{ marginTop: '10px', marginLeft: '7px' }}>Encrypt/Decrypt a file:</Form.Label>
                         </Col>
                         <Col className="col-1">
                             <div className="tooltip-container">
@@ -133,12 +141,12 @@ function BinaryEncryption({password, changePassword, showPassword, setShowPasswo
         </Row>
         <Row>
             <Col>
-                <p style={{ textAlign: "justify" }}>Instructions: encrypt any file type. .txt, zip, pdf, exe, tor, png, gif, .jpg etc.</p>
-                <p>First enter a password, 'Upload' your file and you will get a downloaded, encrypted, .enm (Encryption Magic) file. 'Upload' a .enm file and get your file back.</p>
-                <p><b>All encryption is done within your browser</b> and off-line.</p>
+                <p>Instructions: First enter a password, Choose your file.  Your unencrypted file will be encrypted to a .enm type.  If your file is .enm (and encrypted by us) you will get your original file back.</p>
+                <p style={{ textAlign: "justify" }}>Encrypt any file type. txt, zip, pdf, exe, tor, png, gif, jpg etc.  Get an encrypted .enm file from your browser.</p>
+                <p><b>Encryption and decryption are done within your browser's javascript code and is 100% off-line.</b></p>
             </Col>
         </Row>
-    </div>
+    </>
     )
 }
 

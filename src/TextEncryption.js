@@ -1,41 +1,48 @@
-import React from "react";
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from "react-bootstrap/Button";
-import { useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import PasswordToggleInput from './PasswordToggleInput';
 
-function generateRandomPasswordWithCrypto(length) {
-    const characters = '!@#$%^&*()-+<>/?;:"{[]}\\|`~abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const randomCharacters = [];
-  
-    while (randomCharacters.length < length) {
-      const byte = crypto.getRandomValues(new Uint8Array(1))[0];
-      const character = characters[byte % characters.length];
-      randomCharacters.push(character);
-    }
-  
-    return randomCharacters.join('');
-}
+function TextEncryption({password, changePassword, showPassword, setShowPassword, isBase64Password, setIsBase64Password}) {
 
-function TextEncryption({password, changePassword, showPassword, setShowPassword}) {
+    const [textAreaVal, setTextAreaVal] = useState('');
+    const [textAreaResult, setTextAreaResult] = useState('');
 
-    const [results, setResults] = React.useState('');
-    const [textAreaVal, setTextAreaVal] = React.useState('');
+    const [isHiddenValue, setIsHiddenValue] = useState(true);
+    const [isHiddenResult, setIsHiddenResult] = useState(true);
+
     const bottomRef = useRef(null);
     const textAreaRef = useRef(null);
 
     useEffect(() => {
-        if (results)
+        if (textAreaResult)
         {
             bottomRef.current.scrollIntoView({behavior: 'smooth'});
         }
-    }, [results, password, textAreaVal]);
+    }, [textAreaResult, password, textAreaVal]);
 
-    return (<div>
+    return (<>
         <Row>
-            <Col className={"col-12"} style={{ marginLeft: "7px" }}>
+            <Col className={"col-6"}>
                 Password:
+            </Col>
+            <Col className={"col-6"}>
+                <input
+                    className="form-check-input"
+                    type="checkbox"
+                    name="UseBase64"
+                    id="UseBase64"
+                    checked={isBase64Password}
+                    onChange={e => setIsBase64Password(!isBase64Password)}
+                    style={{ borderColor: "purple" }}
+                    title=""
+                />&nbsp;
+                <label 
+                    className="form-check-label" 
+                    htmlFor="textOption"
+                    onClick={() => setIsBase64Password(!isBase64Password)}
+                >base64 password (most secure)</label>
             </Col>
         </Row>
         <Row>
@@ -47,14 +54,14 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
                     ptStyle={null}
                     ptShowPassword={showPassword}
                     ptSetShowPassword={setShowPassword}
-                    ></PasswordToggleInput>
+                ></PasswordToggleInput>
             </Col>
         </Row>
         <Row>
-            <Col className={"col-12"}>
+            <Col className={"col-12"} style={{ 'marginTop': '4px'}}>
                 <Button 
                     onClick={() => {
-                        changePassword(generateRandomPasswordWithCrypto(32));
+                        changePassword(isBase64Password ? window.getRandomBase64Password() : window.generateRandomPassword(32));
                     }}
                     title={'auto-generate-password'}
                 >Auto-generate password</Button>
@@ -72,47 +79,70 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
         </Row>
         <Row>
             <Col style={{ marginLeft: "7px" }}>
-                Paste your text to encrypt/decrypt below:
+                Paste your text to be encrypted/decrypted below.&nbsp;&nbsp;
+                <label>
+                    <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="hideContentCheckbox"
+                        onChange={(e) => {
+                            setIsHiddenValue(e.target.checked);
+                        }}
+                        checked={isHiddenValue}
+                    /> Hide content to encrypt / decrypt
+                </label>
             </Col>        
         </Row>
         <Row>
             <Col>
-                <textarea 
-                    onChange={(e)=>{
-                        setTextAreaVal(e.target.value);
-                    }} value={textAreaVal} 
-                    className={"textArea boxsizingBorder"}
-                    title={'text-area-payload'}
-                    id={'text-area-payload'}
-                    name={'text-area-payload'}
+                <textarea
+                    onChange={(e) => setTextAreaVal(e.target.value)}
+                    value={textAreaVal}
+                    className={`form-control textArea boxsizingBorder ${isHiddenValue ? 'hidden-textarea' : ''}`}
+                    title="text-area-payload"
+                    id="text-area-payload"
+                    name="text-area-payload"
                 ></textarea>
             </Col>
         </Row>
         <Row>
             <Col>
-                <div style={{ marginBottom : "4px"}}>
+                <div style={{ marginBottom : "4px", marginTop: "4px" }}>
                     <button className="btn btn-success" onClick={async () => {
                             try
                             {
                                 const encrypted = await window.encrypt(textAreaVal, password);
-                                setResults(encrypted);    
+                                setTextAreaResult(encrypted);    
                             }
                             catch(error)
                             {
-                                setResults(error);
+                                setTextAreaResult(error);
                             }
-                        }} disabled={!(password && password.length >= 6 && textAreaVal)}>Encrypt</button>&nbsp;
-                        <button className="btn btn-danger" onClick={async () => {
-                            try
-                            {
-                                const decrypted = await window.decrypt(textAreaVal, password)
-                                setResults(decrypted);
-                            }
-                            catch(error)
-                            {
-                                setResults(error);
-                            }
-                        }} disabled={!(password && password.length >= 6 && textAreaVal)}>Decrypt</button>
+                        }} disabled={!(password && password.length >= 6 && textAreaVal)}
+                    >Encrypt</button>&nbsp;
+                    <button className="btn btn-danger" onClick={async () => {
+                        try
+                        {
+                            const decrypted = await window.decrypt(textAreaVal, password)
+                            setTextAreaResult(decrypted);
+                        }
+                        catch(error)
+                        {
+                            setTextAreaResult(error);
+                        }
+                    }} disabled={!(password && password.length >= 6 && textAreaVal)}
+                    >Decrypt</button>&nbsp;&nbsp;
+                    <label>
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="hideResultsCheckbox"
+                            onChange={(e) => {
+                                setIsHiddenResult(e.target.checked);
+                            }}
+                            checked={isHiddenResult}
+                        /> Hide encrypted / decryptrd result
+                    </label>
                 </div>
 
             </Col>
@@ -123,10 +153,10 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
                     <textarea 
                         ref={textAreaRef} 
                         cols={50} 
-                        value={results} 
+                        value={textAreaResult} 
                         readOnly 
-                        className={"textArea boxsizingBorder"} 
-                        disabled={!results}
+                        className={`form-control textArea boxsizingBorder ${isHiddenResult ? 'hidden-textarea' : ''}`} 
+                        disabled={!textAreaResult}
                         title={'text-area-result'}
                         id={'text-area-result'}
                         name={'text-area-result'}
@@ -139,15 +169,27 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
                             await navigator.clipboard.writeText(textArea.value);
 
                         }}
-                        disabled={!results}
+                        disabled={!textAreaResult}
                         title={'copy-results-button'}
                     >
-                        <span className={"fas fa-copy"}></span></button>
+                        <span className={"fas fa-copy"}></span>
+                    </button>
                 </div>
             </Col>
         </Row>
+        <Row>
+            <Col>
+                <br />
+            </Col>
+        </Row>
+        <Row>
+            <Col>
+                <p style={{ textAlign: "justify" }}><b>Instructions:</b> First, enter a password.  If you are encrypting text paste it into the top text area, then click Encrypt.  Your encrypted text will be copyable in the lower text area.  All fields are 'hidden' by default.  Save your encrypted text, and write down your password, for decryption later.</p>
+                <p style={{ textAlign: "justify" }}>Paset your encrypted text in the top text area.  Click decrypt and you will get your original text copyable in the lower text area.</p>
+            </Col>
+        </Row>
         <div ref={bottomRef} />
-    </div>)
+    </>)
 }
 
 export default TextEncryption;

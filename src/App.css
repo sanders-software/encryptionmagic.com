@@ -20,6 +20,7 @@ body a {
 
 body p {
   font-family: 'Times New Roman';
+  font-size: large;
 }
 
 textarea {
@@ -32,6 +33,10 @@ input {
   border: none;
   background-color: transparent;
   outline: none;
+}
+
+input[type="checkbox"] {
+  border-color: purple;
 }
 
 .textArea {
@@ -68,6 +73,11 @@ input {
 
 .text-area-wrapper {
   position: relative;
+}
+
+.hidden-textarea {
+  -webkit-text-security: disc;
+  -moz-text-security: disc;
 }
 
 .fas {
@@ -115,9 +125,6 @@ input {
   position: relative;
   display: inline-block;
 }
-
-
-/* width: 70vw; */
 
 .tooltip-text {
   visibility: hidden;
