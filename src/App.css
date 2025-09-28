@@ -195,3 +195,13 @@ input[type="checkbox"] {
     width: 150px;
   }
 }
+
+.modal-title {
+  font-family: 'Viner Hand ITC';
+  font-size: 20px;
+  color: purple;
+}
+
+.modal-body, .modal-footer {
+  font-family: 'Arial', sans-serif;
+}

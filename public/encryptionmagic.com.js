@@ -350,7 +350,6 @@ async function encrypt(textToEncrypt, password) {
     if (passwordType_DecodedPassword[0] === "customBase64")
     {
         password = passwordType_DecodedPassword[1];
-        console.log('Using special case for base64 encoded 32 byte pw.');
     }
 
     const encodedPassword = password instanceof Uint8Array ? password : new TextEncoder().encode(password); // convert password to Uint8Array if not already
@@ -365,19 +364,19 @@ async function encrypt(textToEncrypt, password) {
     const cipherTextEncodedUtf8 = new TextEncoder().encode(cipherTextJoined);
     const finalCipherText = buf2hex(cipherTextEncodedUtf8);
 
-    // Output in ANSIBLE_VAULT format.
+    // Output in ENCRYPTION_MAGIC_VAULT format (which follows ANSIBLE_VAULT standards).
     let counter = 0;
-    let ansibleEncryption = "$ANSIBLE_VAULT;1.1;AES256\n";
+    let encryptionMagicEncryption = "$ENCRYPTION_MAGIC_VAULT;1.1;AES256\n";
 
     for (const c of finalCipherText) {
-        ansibleEncryption += c;
+        encryptionMagicEncryption += c;
         counter += 1;
         if (counter % 80 === 0) {
-            ansibleEncryption += "\n";
+            encryptionMagicEncryption += "\n";
         }
     }
 
-    return ansibleEncryption;
+    return encryptionMagicEncryption;
 }
 
 async function decrypt(encryptedFileContent, password) {
@@ -389,8 +388,8 @@ async function decrypt(encryptedFileContent, password) {
         throw new Error("Password is required");
     }
 
-    if (!encryptedFileContent.startsWith("$ANSIBLE_VAULT")) {
-        throw new Error("Vault text does not start with the header `$ANSIBLE_VAULT;`");
+    if (!encryptedFileContent.startsWith("$ANSIBLE_VAULT") && !encryptedFileContent.startsWith("$ENCRYPTION_MAGIC_VAULT")) {
+        throw new Error("Vault text must start with the header `$ENCRYPTION_MAGIC_VAULT` or `$ANSIBLE_VAULT;`");
     }
 
     const vaultLines = encryptedFileContent.split('\n');
@@ -423,8 +422,7 @@ async function decrypt(encryptedFileContent, password) {
         let [isValid2, decryptedBytes2] = await verify_and_decrypt(passwordType_DecodedPassword[1], salt_bytes, hmac_hex_bytes, encrypted_bytes);
         if (!isValid2) {
             throw new Error("HMAC verification failed, do you have the wrong password?");
-        }
-        console.log('Using special case for base64 encoded 32 byte pw.');
+        };
 
         const isPadded = hasPadding(new Uint8Array(decryptedBytes2), 16); // Assuming block size of 16
         const unpaddedBytes = unpad(new Uint8Array(decryptedBytes2), 16, isPadded);
@@ -448,7 +446,6 @@ async function encryptBytes(fileContent, password)
     if (passwordType_DecodedPassword[0] === "customBase64")
     {
         password = passwordType_DecodedPassword[1];
-        console.log('Using special case for base64 encoded 32 byte pw.');
     }
 
     const encodedPassword = password instanceof Uint8Array ? password : new TextEncoder().encode(password); // convert password to Uint8Array if not already
@@ -513,7 +510,6 @@ async function decryptBytes(encryptedFileBytes, password) {
         if (!isValid2) {
             throw new Error("HMAC verification failed, do you have the wrong password?");
         }
-        console.log('Using special case for base64 encoded 32 byte pw.');
 
         const isPadded = hasPadding(new Uint8Array(decryptedBytes2), 16); // Assuming block size of 16
         return unpad(new Uint8Array(decryptedBytes2), 16, isPadded);
@@ -536,7 +532,6 @@ async function encryptBytesToText(fileName, fileContent, password)
     if (passwordType_DecodedPassword[0] === "customBase64")
     {
         password = passwordType_DecodedPassword[1];
-        console.log('Using special case for base64 encoded 32 byte pw.');
     }
 
     const encodedPassword = password instanceof Uint8Array ? password : new TextEncoder().encode(password); // convert password to Uint8Array if not already
@@ -616,7 +611,6 @@ async function decryptTextToBytes(encryptedFileContent, password) {
         if (!isValid2) {
             throw new Error("HMAC verification failed, do you have the wrong password?");
         }
-        console.log('Using special case for base64 encoded 32 byte pw.');
 
         const isPadded = hasPadding(new Uint8Array(decryptedBytes2), 16); // Assuming block size of 16
         const unpaddedBytes = unpad(new Uint8Array(decryptedBytes2), 16, isPadded);
@@ -648,6 +642,123 @@ function bytesToBase64enmEnc(byteArray) {
     return customBase64;
 }
 
+async function generateRSAKeyPair() {
+
+  try {
+    // Generate the RSA key pair
+    const keyPair = await crypto.subtle.generateKey(
+      {
+        name: "RSA-OAEP",
+        modulusLength: 4096,
+        publicExponent: new Uint8Array([1, 0, 1]), // 65537
+        hash: "SHA-256"
+      },
+      true, // Extractable
+      ["encrypt", "decrypt"]
+    );
+
+    // Export public key to JWK and stringify
+    const publicJWK = await crypto.subtle.exportKey("jwk", keyPair.publicKey);
+    const publicString = JSON.stringify(publicJWK);
+
+    // Export private key to JWK and stringify
+    const privateJWK = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    const privateString = JSON.stringify(privateJWK);
+
+    // Return as a "tuple" (array) of two strings
+    let obj = {};
+    obj.publicKey = publicString;
+    obj.privateKey = privateString;
+    return obj;
+  } catch (error) {
+    console.error("Error generating RSA key pair:", error);
+    throw error;
+  }
+}
+
+async function importRSAPublicKey(publicKeyString) {
+  try {
+    const publicJWK = JSON.parse(publicKeyString);
+    const publicKey = await crypto.subtle.importKey(
+      "jwk",
+      publicJWK,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256"
+      },
+      true,
+      ["encrypt"]
+    );
+    return publicKey;
+  } catch (error) {
+    console.error("Error importing RSA public key:", error);
+    throw error;
+  }
+}
+
+async function encryptPasswordWithPublicKey(publicKey, password) {
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const encrypted = await crypto.subtle.encrypt(
+      { name: "RSA-OAEP" },
+      publicKey,
+      data
+    );
+    const encryptedArray = new Uint8Array(encrypted);
+    return btoa(String.fromCharCode(...encryptedArray));
+  } catch (error) {
+    console.error("Error encrypting password:", error);
+    throw error;
+  }
+}
+
+async function encryptPayload(publicKeyString, password) {
+  const publicKey = await importRSAPublicKey(publicKeyString);
+  return await encryptPasswordWithPublicKey(publicKey, password);
+}
+
+async function importRSAPrivateKey(privateKeyString) {
+  try {
+    const privateJWK = JSON.parse(privateKeyString);
+    const privateKey = await crypto.subtle.importKey(
+      "jwk",
+      privateJWK,
+      {
+        name: "RSA-OAEP",
+        hash: "SHA-256"
+      },
+      true,
+      ["decrypt"]
+    );
+    return privateKey;
+  } catch (error) {
+    console.error("Error importing RSA private key:", error);
+    throw error;
+  }
+}
+
+async function decryptPasswordWithPrivateKey(privateKey, encryptedBase64) {
+  try {
+    const encryptedArray = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "RSA-OAEP" },
+      privateKey,
+      encryptedArray
+    );
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
+  } catch (error) {
+    console.error("Error decrypting password:", error);
+    throw error;
+  }
+}
+
+async function decryptPayload(privateKeyString, encryptedBase64) {
+  const privateKey = await importRSAPrivateKey(privateKeyString);
+  return await decryptPasswordWithPrivateKey(privateKey, encryptedBase64);
+}
+
 window.encrypt = encrypt;
 window.encryptBytes = encryptBytes;
 window.encryptBytesToText = encryptBytesToText;
@@ -655,6 +766,10 @@ window.encryptBytesToText = encryptBytesToText;
 window.decrypt = decrypt;
 window.decryptBytes = decryptBytes;
 window.decryptTextToBytes = decryptTextToBytes;
+
+window.generateRSAKeyPair = generateRSAKeyPair;
+window.encryptPayload = encryptPayload;
+window.decryptPayload = decryptPayload;
 
 window.getRandomBase64Password = getRandomBase64Password;
 window.generateRandomPassword = generateRandomPassword;

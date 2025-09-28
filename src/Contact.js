@@ -1,4 +1,3 @@
-import React from "react";
 import { Row, Col } from 'react-bootstrap';
 
 const Contact = () => {
@@ -11,7 +10,7 @@ const Contact = () => {
     </Row>
     <Row>
       <Col>
-        <p>Please email us at <a href="mailto:encryptionmagic.com@gmail.com">encryptionmagic.com@gmail.com</a>.</p>
+        <p>Please email us at <a href="mailto:support@sanders.software">support@sanders.software</a>.</p>
       </Col>
     </Row>
   </Col>)

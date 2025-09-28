@@ -23,7 +23,9 @@ const ads = [
   // <a href={process.env.PUBLIC_URL + "#adclick"} target={"_blank"} title={"Advertise!"} rel={"noreferrer"}>
   //   <img className={"adClass"} src={process.env.PUBLIC_URL + '/img/Another-your-ad-here.jpg'} alt={''} />
   // </a>
-  <></>
+  <a href={"https://sanders.software/pages/securedonation"} target={"_blank"} title={"Advertise!"} rel={"noreferrer"}>
+    <img className={"adClass"} src={process.env.PUBLIC_URL + '/img/Support_Our_Work.png'} alt={''} />
+  </a>
 ];
 
 const RandomAdElement = ({index}) => {

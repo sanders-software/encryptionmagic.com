@@ -231,14 +231,6 @@ function FileToTextEncryption({password, changePassword, showPassword, setShowPa
                     <p style={{ textAlign: "justify" }}>Your data never leaves your browser, you could initially load 'the website' then work with it as an 'off-line' tool.  Feel free test it's 100% 'off-line' functionality.</p>
                 </Col>
             </Row>
-            <Row>
-                <Col>
-                    <p style={{ textAlign: "justify" }}><b>Background</b>: The best way to send an encrypted "file" is to serialize it through text.  Most text and mail provider apps will not allow non-standard file types (like .enm).  "File to Encrypted Text" is the (brilliant) work-around.  In theory, any file could be serialize to encrypted text, but since it's done on the browser, the larger the file the longer the "Wait".</p>
-                    {/* <p style={{ textAlign: "justify" }}><b>Use cases:</b><br /> 1) As a corporation, we want more data privacy options, so we implement the open-source EncryptionMagic web based tool on our intranet.</p>
-                    <p style={{ textAlign: "justify" }}>2) As a couple, we don't want "Big Tech" to see any of these intimate pictures, so we text them to each other as encrypted text.  Then decrypt them to our phones.</p>
-                    <p style={{ textAlign: "justify" }}>3) As an individual, I want to encrypt my files and passwords using a tool available offline using the highest standards and best industry practices.</p> */}
-                </Col>
-            </Row>
             <div ref={bottomRef} />
         </>
         )

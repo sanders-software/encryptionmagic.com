@@ -8,6 +8,7 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
 
     const [textAreaVal, setTextAreaVal] = useState('');
     const [textAreaResult, setTextAreaResult] = useState('');
+    const [theError, setTheError] = useState('');
 
     const [isHiddenValue, setIsHiddenValue] = useState(true);
     const [isHiddenResult, setIsHiddenResult] = useState(true);
@@ -112,11 +113,16 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
                             try
                             {
                                 const encrypted = await window.encrypt(textAreaVal, password);
-                                setTextAreaResult(encrypted);    
+                                setTextAreaResult(encrypted);
+                                setTheError('');  
                             }
                             catch(error)
                             {
-                                setTextAreaResult(error);
+                                const errMsg = error && error.message ? error.message : error.toString();
+                                if (errMsg.indexOf('HMAC') >= 0) {
+                                    setTheError(errMsg);
+                                }
+                                setTextAreaResult('');
                             }
                         }} disabled={!(password && password.length >= 6 && textAreaVal)}
                     >Encrypt</button>&nbsp;
@@ -125,10 +131,15 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
                         {
                             const decrypted = await window.decrypt(textAreaVal, password)
                             setTextAreaResult(decrypted);
+                            setTheError('');
                         }
                         catch(error)
                         {
-                            setTextAreaResult(error);
+                            const errMsg = error && error.message ? error.message : error.toString();
+                            if (errMsg.indexOf('HMAC') >= 0) {
+                                setTheError(errMsg);
+                            }
+                            setTextAreaResult('');
                         }
                     }} disabled={!(password && password.length >= 6 && textAreaVal)}
                     >Decrypt</button>&nbsp;&nbsp;
@@ -143,6 +154,7 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
                             checked={isHiddenResult}
                         /> Hide encrypted / decryptrd result
                     </label>
+                    {theError && theError.length && (<span style={{ color: "red" }}>&nbsp;&nbsp;{theError}</span>)}
                 </div>
 
             </Col>
@@ -185,7 +197,7 @@ function TextEncryption({password, changePassword, showPassword, setShowPassword
         <Row>
             <Col>
                 <p style={{ textAlign: "justify" }}><b>Instructions:</b> First, enter a password.  If you are encrypting text paste it into the top text area, then click Encrypt.  Your encrypted text will be copyable in the lower text area.  All fields are 'hidden' by default.  Save your encrypted text, and write down your password, for decryption later.</p>
-                <p style={{ textAlign: "justify" }}>Paset your encrypted text in the top text area.  Click decrypt and you will get your original text copyable in the lower text area.</p>
+                <p style={{ textAlign: "justify" }}>Paste your encrypted text in the top text area.  Click decrypt and you will get your original text copyable in the lower text area.</p>
             </Col>
         </Row>
         <div ref={bottomRef} />
